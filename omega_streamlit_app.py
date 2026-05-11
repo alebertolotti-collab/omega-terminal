@@ -305,7 +305,7 @@ with col1:
     st.metric(
         "Current Price",
         format_currency(current_price),
-        f"{price_change:+.2f}%"
+        price_change = ((current_price - prev_close) / prev_close) * 100 if prev_close != 0 else 0
     )
 
 with col2:
