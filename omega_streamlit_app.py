@@ -123,11 +123,6 @@ class ThermodynamicEngine:
             'volume_multiplier': volume_multiplier,
             'current_price': current_price,
             'theoretical_price': current_theo,
-            'formula1_value': current_theo,
-            'formula2_entropy': entropy,
-            'formula3_mass': volume_multiplier,
-            'formula4_radar': radar,
-            'formula5_spread': spread
         }
     
     def calculate_shannon_entropy(self, prices):
@@ -234,9 +229,12 @@ def fetch_market_data(ticker, period="60d"):
         return None
 
 def format_currency(value, decimals=2):
-    if value is None:
+    try:
+        if value is None or pd.isna(value):
+            return "$0.00"
+        return f"${float(value):,.{decimals}f}"
+    except:
         return "$0.00"
-    return f"${value:,.{decimals}f}"
 
 st.sidebar.markdown("### ⚡ OMEGA Entropy Terminal")
 st.sidebar.markdown("Thermodynamic market analysis with ALL 5 formulas")
@@ -442,7 +440,7 @@ def generate_ai_response(query):
         return f"**FORMULA 2 - Shannon Entropy: {metrics['entropy']:.3f} bits** | Level: {level}\n\nHigh entropy = more market disorder and unpredictability."
     
     elif 'formula 1' in lower_query or 'theoretical' in lower_query:
-        return f"**FORMULA 1 - Motor of Value (V_t): ${metrics['theoretical_price']:.2f}**\n\nCurrent Price: ${metrics['current_price']:.2f}\nDifference: {metrics['spread']:+.2f}%"
+        return f"**FORMULA 1 - Motor of Value (V_t): {format_currency(metrics['theoretical_price'])}**\n\nCurrent Price: {format_currency(metrics['current_price'])}\nDifference: {metrics['spread']:+.2f}%"
     
     elif 'formula 3' in lower_query or 'volume' in lower_query or 'mass' in lower_query:
         return f"**FORMULA 3 - Mass Multiplier (M_t): {metrics['volume_multiplier']:.3f}x**\n\nVolume validation factor for price movements."
@@ -455,18 +453,18 @@ def generate_ai_response(query):
     
     elif 'buy' in lower_query or 'compra' in lower_query:
         if trade_signal == "BUY":
-            return f"🟢 **BUY SIGNAL ACTIVE!**\n\n{ticker} is **{abs(metrics['spread']):.2f}% UNDERVALUED** vs theoretical value.\n\nTheoretical (F1): ${metrics['theoretical_price']:.2f}\nCurrent: ${metrics['current_price']:.2f}"
+            return f"🟢 **BUY SIGNAL ACTIVE!**\n\n{ticker} is **{abs(metrics['spread']):.2f}% UNDERVALUED** vs theoretical value.\n\nTheoretical (F1): {format_currency(metrics['theoretical_price'])}\nCurrent: {format_currency(metrics['current_price'])}"
         else:
             return f"❌ No BUY signal. Current spread: {metrics['spread']:+.2f}%\n\nNeed spread < -3.5% to trigger BUY."
     
     elif 'sell' in lower_query or 'vendi' in lower_query:
         if trade_signal == "SELL":
-            return f"🔴 **SELL SIGNAL ACTIVE!**\n\n{ticker} is **{metrics['spread']:.2f}% OVERVALUED** vs theoretical value.\n\nTheoretical (F1): ${metrics['theoretical_price']:.2f}\nCurrent: ${metrics['current_price']:.2f}"
+            return f"🔴 **SELL SIGNAL ACTIVE!**\n\n{ticker} is **{metrics['spread']:.2f}% OVERVALUED** vs theoretical value.\n\nTheoretical (F1): {format_currency(metrics['theoretical_price'])}\nCurrent: {format_currency(metrics['current_price'])}"
         else:
             return f"❌ No SELL signal. Current spread: {metrics['spread']:+.2f}%\n\nNeed spread > +3.5% to trigger SELL."
     
     else:
-        return f"**{ticker} Thermodynamic Summary (All 5 Formulas):**\n\n📊 **F1 Theoretical Value:** ${metrics['theoretical_price']:.2f}\n🌪️ **F2 Entropy:** {metrics['entropy']:.3f} bits\n⚖️ **F3 Mass Multiplier:** {metrics['volume_multiplier']:.3f}x\n🔌 **F4 Transition Radar:** {metrics['radar']:.4f}\n🎯 **F5 Spread:** {metrics['spread']:+.2f}%\n\n⚡ **Signal:** {trade_signal}\n\nAsk about any formula (1-5), entropy, signals, or market state!"
+        return f"**{ticker} Thermodynamic Summary (All 5 Formulas):**\n\n📊 **F1 Theoretical Value:** {format_currency(metrics['theoretical_price'])}\n🌪️ **F2 Entropy:** {metrics['entropy']:.3f} bits\n⚖️ **F3 Mass Multiplier:** {metrics['volume_multiplier']:.3f}x\n🔌 **F4 Transition Radar:** {metrics['radar']:.4f}\n🎯 **F5 Spread:** {metrics['spread']:+.2f}%\n\n⚡ **Signal:** {trade_signal}\n\nAsk about any formula (1-5), entropy, signals, or market state!"
 
 if send_button and user_input:
     st.info(f"**You:** {user_input}")
@@ -478,7 +476,7 @@ st.markdown("---")
 with st.expander("📋 View detailed price data"):
     display_data = data[['Close']].tail(20).copy()
     display_data.columns = ['Close Price']
-    display_data['Close Price'] = display_data['Close Price'].apply(lambda x: f"${x:.2f}")
+    display_data['Close Price'] = display_data['Close Price'].apply(lambda x: format_currency(x))
     st.dataframe(display_data, use_container_width=True)
 
 st.markdown("---")
