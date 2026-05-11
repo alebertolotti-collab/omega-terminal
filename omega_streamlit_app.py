@@ -298,14 +298,18 @@ metrics = engine.add_data_point(data['Close'], data.get('Volume'))
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
+    with col1:
     current_price = metrics['current_price']
     prev_close = data['Close'].iloc[-2] if len(data) > 1 else current_price
-    price_change = ((current_price - prev_close) / prev_close) * 100
+    if prev_close != 0:
+        price_change = ((current_price - prev_close) / prev_close) * 100
+    else:
+        price_change = 0
     
     st.metric(
         "Current Price",
         format_currency(current_price),
-        price_change = ((current_price - prev_close) / prev_close) * 100 if prev_close != 0 else 0
+        f"{price_change:+.2f}%"
     )
 
 with col2:
